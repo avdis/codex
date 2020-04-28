@@ -22,7 +22,7 @@ var gulp = require('gulp');
 var gutil = require('gulp-util');
 var gulpConcat = require('gulp-concat');
 var tap = require('gulp-tap');
-var runSequence = require('run-sequence');
+var runSequence = require('gulp4-run-sequence');
 var jscs = require('gulp-jscs');
 var uglify = require('gulp-uglify');
 var cssmin = require('gulp-cssmin');
@@ -61,7 +61,7 @@ gulp.task('jsTidy', jsTidy);
 gulp.task('mediaTidy', mediaTidy);
 gulp.task('copy', copy);
 
-function build() {
+function build(done) {
   runSequence(
     'js',
     'css',
@@ -69,21 +69,24 @@ function build() {
     'cssMin',
     'copy'
   );
+  done();
 }
 
-function min() {
+function min(done) {
   runSequence(
     'cssMin',
     'jsMin'
   );
+  done();
 }
 
-function watch() {
+function watch(done) {
   gulp.watch(settings.watch.css, ['css']);
   gulp.watch(settings.watch.js, ['js']);
+  done();
 }
 
-function js() {
+function js(done) {
   return gulp.src(settings.js + '**/*.bundle.js', {read: false})
     .pipe(tap(function(file) {
       file.contents = browserify(file.path, {debug: settings.isLocal})
@@ -93,63 +96,70 @@ function js() {
     }))
     .pipe(buffer())
     .pipe(gulp.dest(settings.assetDest));
+    done();
 };
 
-function css() {
+function css(done) {
   return gulp.src(settings.css + '**/*.bundle.css')
     .pipe(postcss(postcssProcesses))
     .pipe(tap(function(file) {
       gutil.log('build ' + file.path);
     }))
     .pipe(gulp.dest(settings.assetDest));
+    done();
 };
 
-function cssMin() {
+function cssMin(done) {
   return gulp.src(settings.assetDest + '**/*.css')
     .pipe(cssmin())
     .pipe(tap(function(file) {
       gutil.log('minify ' + file.path);
     }))
     .pipe(gulp.dest(settings.assetDest));
+    done();
 }
 
-function cssTidy() {
+function cssTidy(done) {
   return gulp.src(settings.css + '**/*.css')
     .pipe(postcss([postcssCsscomb(postcssCombOptions)]))
     .pipe(tap(function(file) {
       gutil.log('tidy ' + file.path);
     }))
     .pipe(gulp.dest('css'));
+    done();
 }
 
-function jsLib() {
+function jsLib(done) {
   gulp.src(settings.jsLibs)
     .pipe(tap(function(file) {
       gutil.log('concat ' + file.path);
     }))
     .pipe(gulpConcat('lib.js'))
     .pipe(gulp.dest(settings.assetDest));
+    done();
 }
 
-function jsMin() {
+function jsMin(done) {
   return gulp.src(settings.assetDest + '**.js')
     .pipe(uglify())
     .pipe(tap(function(file) {
       gutil.log('minify ' + file.path);
     }))
     .pipe(gulp.dest(settings.assetDest));
+    done();
 }
 
-function jsTidy() {
+function jsTidy(done) {
   return gulp.src([settings.js + '**/*.js'])
     .pipe(jscs({
       configPath: 'gulp/.jsTidyGoogle.json',
       fix: true
     }))
     .pipe(gulp.dest('js'));
+    done();
 }
 
-function mediaTidy() {
+function mediaTidy(done) {
   return gulp.src(settings.media + '**')
     .pipe(imagemin({
       progressive: true,
@@ -157,9 +167,11 @@ function mediaTidy() {
       use: [pngquant()]
     }))
     .pipe(gulp.dest(settings.assetDest));
+    done();
 }
 
-function copy() {
+function copy(done) {
   // gulp.src('index.html').pipe(gulp.dest('dist'));
   // gulp.src('asset/common.bundle.css').pipe(gulp.dest('dist/asset'));
+  done();
 }
